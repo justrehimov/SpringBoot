@@ -10,4 +10,10 @@ public interface UserService {
     User save(User user);
 
     User get(Long id);
+
+    User update(User user, Long id);
+
+    User delete(Long id);
+
+
 }
