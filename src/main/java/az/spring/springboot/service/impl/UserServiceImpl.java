@@ -1,56 +1,118 @@
 package az.spring.springboot.service.impl;
 
+import az.spring.springboot.dto.request.UserRequest;
+import az.spring.springboot.dto.response.ResponseModel;
+import az.spring.springboot.dto.response.UserResponse;
 import az.spring.springboot.entity.User;
+import az.spring.springboot.exceptions.SpringException;
+import az.spring.springboot.exceptions.StatusMessage;
 import az.spring.springboot.repository.UserRepository;
 import az.spring.springboot.service.UserService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
+    private final ModelMapper modelMapper;
 
     @Override
-    public List<User> list() {
-        return userRepository.findAll();
+    public ResponseModel<List<UserResponse>> list() {
+        List<User> userList = userRepository.findAll();
+
+        List<UserResponse> userResponseList = userList.stream()
+                .map(user -> modelMapper.map(user, UserResponse.class))
+                .collect(Collectors.toList());
+
+        return ResponseModel.<List<UserResponse>>builder()
+                .result(userResponseList)
+                .error(false)
+                .message(StatusMessage.SUCCESS)
+                .code(HttpStatus.OK.value())
+                .build();
+
     }
 
     @Override
-    public User save(User user) {
-        return userRepository.save(user);
+    public ResponseModel<UserResponse> save(UserRequest userRequest) {
+        User user = modelMapper.map(userRequest, User.class);
+        User savedUser = userRepository.save(user);
+        UserResponse userResponse = modelMapper.map(savedUser, UserResponse.class);
+        return ResponseModel.<UserResponse>builder()
+                .result(userResponse)
+                .error(false)
+                .message(StatusMessage.SUCCESS)
+                .code(HttpStatus.OK.value())
+                .build();
+
     }
 
     @Override
-    public User get(Long id) {
-       Optional<User> optionalUser =  userRepository.findById(id);
-       return optionalUser.orElseThrow(()->new IllegalArgumentException("User not found"));
+    public ResponseModel<UserResponse> get(Long id) {
+        Optional<User> optionalUser = userRepository.findById(id);
+        User user = optionalUser.orElseThrow(() -> new SpringException(StatusMessage.USER_NOT_FOUND));
+        UserResponse userResponse = modelMapper.map(user, UserResponse.class);
+
+        return ResponseModel.<UserResponse>builder()
+                .result(userResponse)
+                .error(false)
+                .message(StatusMessage.SUCCESS)
+                .code(HttpStatus.OK.value())
+                .build();
     }
+
+
     @Override
-    public User update(User user, Long id) {
-        Optional<User> savedUser=userRepository.findById(id);
-        if (savedUser.isPresent()){
-            savedUser.get().setFirstName(user.getFirstName());
-            savedUser.get().setLastName(user.getLastName());
-            savedUser.get().setAge(user.getAge());
-            return userRepository.save(savedUser.get());
-        }else {
-            return savedUser.get();
+    @Transactional
+    public ResponseModel<UserResponse> update(UserRequest userRequest, Long id) {
+        Optional<User> savedUser = userRepository.findById(id);
+        if (savedUser.isPresent()) {
+
+            User user = modelMapper.map(userRequest, User.class);
+            user.setId(id);
+            User updatedUser = userRepository.save(user);
+
+            UserResponse userResponse = modelMapper.map(updatedUser, UserResponse.class);
+
+            return ResponseModel.<UserResponse>builder()
+                    .result(userResponse)
+                    .error(false)
+                    .code(HttpStatus.OK.value())
+                    .message(StatusMessage.SUCCESS)
+                    .build();
+
+        } else {
+            throw new SpringException(StatusMessage.USER_NOT_FOUND);
         }
     }
 
     @Override
-    public User delete(Long id) {
-        Optional<User> user = userRepository.findById(id);
-        if (user.isPresent()) {
-            userRepository.delete(user.get());
-            return user.get();
+    @Transactional
+    public ResponseModel<UserResponse> delete(Long id) {
+        Optional<User> userOptional = userRepository.findById(id);
+        if (userOptional.isPresent()) {
+            User user = userOptional.get();
+
+            userRepository.delete(user);
+            UserResponse userResponse = modelMapper.map(user, UserResponse.class);
+
+            return ResponseModel.<UserResponse>builder()
+                    .result(userResponse)
+                    .error(false)
+                    .code(HttpStatus.OK.value())
+                    .message(StatusMessage.SUCCESS)
+                    .build();
         } else {
-            return null;
+            throw new SpringException(StatusMessage.USER_NOT_FOUND);
         }
     }
 }

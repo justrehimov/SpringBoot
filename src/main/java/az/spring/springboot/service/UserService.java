@@ -1,19 +1,21 @@
 package az.spring.springboot.service;
 
-import az.spring.springboot.entity.User;
+import az.spring.springboot.dto.request.UserRequest;
+import az.spring.springboot.dto.response.ResponseModel;
+import az.spring.springboot.dto.response.UserResponse;
 
 import java.util.List;
 
 public interface UserService {
-    List<User> list();
+    ResponseModel<List<UserResponse>> list();
 
-    User save(User user);
+    ResponseModel<UserResponse> save(UserRequest user);
 
-    User get(Long id);
+    ResponseModel<UserResponse> get(Long id);
 
-    User update(User user, Long id);
+    ResponseModel<UserResponse> update(UserRequest user, Long id);
 
-    User delete(Long id);
+    ResponseModel<UserResponse> delete(Long id);
 
 
 }
