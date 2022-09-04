@@ -50,7 +50,7 @@ public class UserServiceImpl implements UserService {
         return ResponseModel.<UserResponse>builder()
                 .result(userResponse)
                 .error(false)
-                .message(StatusMessage.SUCCESS)
+                .message(StatusMessage.ERROR)
                 .code(HttpStatus.OK.value())
                 .build();
 
