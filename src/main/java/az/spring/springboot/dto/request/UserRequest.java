@@ -25,4 +25,9 @@ public class UserRequest {
 
     @NotNull(message = "Age can't be null")
     private Integer age;
+
+
+    @NotNull(message = "Address can't be null")
+    @NotBlank(message = "Address can't be blank")
+    private String address;
 }

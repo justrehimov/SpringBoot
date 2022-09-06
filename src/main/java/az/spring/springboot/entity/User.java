@@ -28,4 +28,8 @@ public class User {
 
     @Column(name = "age", nullable = false)
     private Integer age;
+
+    @ManyToOne
+    @JoinColumn(name = "fk_address", referencedColumnName = "id")
+    private Address address;
 }
