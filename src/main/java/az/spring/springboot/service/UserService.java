@@ -2,6 +2,7 @@ package az.spring.springboot.service;
 
 import az.spring.springboot.dto.request.UserRequest;
 import az.spring.springboot.dto.response.ResponseModel;
+import az.spring.springboot.dto.response.ResponsePageModel;
 import az.spring.springboot.dto.response.UserAddressResponse;
 import az.spring.springboot.dto.response.UserResponse;
 import az.spring.springboot.entity.User;
@@ -31,4 +32,6 @@ public interface UserService {
     List<String> getSurnamesBySurname(String surname);
 
     List<UserAddressResponse> getUserAddressResponses();
+
+    ResponsePageModel<List<UserResponse>> list(String filter, Integer age, String address, Integer page, Integer size);
 }

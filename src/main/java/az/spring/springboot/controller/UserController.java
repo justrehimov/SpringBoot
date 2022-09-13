@@ -2,6 +2,7 @@ package az.spring.springboot.controller;
 
 import az.spring.springboot.dto.request.UserRequest;
 import az.spring.springboot.dto.response.ResponseModel;
+import az.spring.springboot.dto.response.ResponsePageModel;
 import az.spring.springboot.dto.response.UserAddressResponse;
 import az.spring.springboot.dto.response.UserResponse;
 import az.spring.springboot.entity.User;
@@ -19,10 +20,16 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+
     @GetMapping("/list")
-    public ResponseModel<List<UserResponse>> list() {
-        return userService.list();
+    public ResponsePageModel<List<UserResponse>> list(@RequestParam(value = "filter", required = false) String filter,
+                                                      @RequestParam(value = "age", required = false) Integer age,
+                                                      @RequestParam(value = "address", required = false) String address,
+                                                      @RequestParam(value = "page", required = false) Integer page,
+                                                      @RequestParam(value = "size", required = false) Integer size){
+        return userService.list(filter, age, address, page, size);
     }
+
 
     @GetMapping("/{id}")
     public ResponseModel<UserResponse> get(@PathVariable("id") Long id) {

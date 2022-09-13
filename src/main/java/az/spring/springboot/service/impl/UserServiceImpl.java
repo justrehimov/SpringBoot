@@ -1,9 +1,8 @@
 package az.spring.springboot.service.impl;
 
+import az.spring.springboot.dao.UserDao;
 import az.spring.springboot.dto.request.UserRequest;
-import az.spring.springboot.dto.response.ResponseModel;
-import az.spring.springboot.dto.response.UserAddressResponse;
-import az.spring.springboot.dto.response.UserResponse;
+import az.spring.springboot.dto.response.*;
 import az.spring.springboot.entity.Address;
 import az.spring.springboot.entity.User;
 import az.spring.springboot.exceptions.SpringException;
@@ -13,6 +12,7 @@ import az.spring.springboot.repository.UserRepository;
 import az.spring.springboot.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +28,10 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
     private final AddressRepository addressRepository;
+    private final UserDao userDao;
+
+    @Value("${default.page.element.size}")
+    private int pageElementSize;
 
     @Override
     public ResponseModel<List<UserResponse>> list() {
@@ -177,5 +181,45 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserAddressResponse> getUserAddressResponses() {
         return userRepository.getUserAddressResponse();
+    }
+
+    @Override
+    public ResponsePageModel<List<UserResponse>> list(String filter, Integer age, String address, Integer page, Integer size) {
+
+        int pageSize = size == null ? pageElementSize : size;
+        int currentPage = page == null ? 0 : page;
+
+        List<User> userList = userDao.list(filter, age, address, currentPage, pageSize);
+
+        List<UserResponse> userResponseList = userList.stream().map(user -> {
+            UserResponse userResponse = modelMapper.map(user, UserResponse.class);
+            userResponse.setAddress(user.getAddress().getAddress());
+            return userResponse;
+        }).collect(Collectors.toList());
+
+        int totalElement = (int)userRepository.count();
+
+        int totalPage = (int)Math.ceil(totalElement/(double)pageSize);
+
+
+        Pagination pagination = Pagination.builder()
+                .currentPage(currentPage)
+                .offset(userResponseList.size())
+                .totalElement(totalElement)
+                .totalPage(totalPage)
+                .build();
+
+        PageData<List<UserResponse>> pageData = PageData.<List<UserResponse>>builder()
+                .data(userResponseList)
+                .pagination(pagination)
+                .build();
+
+        return ResponsePageModel.<List<UserResponse>>builder()
+                .result(pageData)
+                .message(StatusMessage.SUCCESS)
+                .error(false)
+                .code(HttpStatus.OK.value())
+                .build();
+
     }
 }
